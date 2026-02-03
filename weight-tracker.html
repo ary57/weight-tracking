@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Weight Tracker</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Track your weight daily with an easy-to-use offline app">
+    <meta name="theme-color" content="#007bff">
+    
+    <!-- iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Weight Tracker">
+    
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23007bff'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='100' fill='white'>⚖️</text></svg>">
+    
+    <!-- Android Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23007bff'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='100' fill='white'>⚖️</text></svg>">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiV2VpZ2h0IFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiV2VpZ2h0Iiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmNWY1ZjUiLCJ0aGVtZV9jb2xvciI6IiMwMDdiZmYiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5Mic+PHJlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIGZpbGw9JyUyMzAwN2JmZicvPjx0ZXh0IHg9JzUwJTI1JyB5PSc1MCUyNScgZG9taW5hbnQtYmFzZWxpbmU9J21pZGRsZScgdGV4dC1hbmNob3I9J21pZGRsZScgZm9udC1zaXplPScxMjAnIGZpbGw9J3doaXRlJz7wn5OKPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn0seyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJz48cmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgZmlsbD0nJTIzMDA3YmZmJy8+PHRleHQgeD0nNTAlMjUnIHk9JzUwJTI1JyBkb21pbmFudC1iYXNlbGluZT0nbWlkZGxlJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzMyMCcgZmlsbD0nd2hpdGUnPvCfk4o8L3RleHQ+PC9zdmc+Iiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin: 0;
+            font-size: clamp(24px, 5vw, 32px);
+        }
+
+        .settings-icon {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .settings-icon:hover {
+            background: #f0f0f0;
+        }
+
+        .settings-icon:active {
+            transform: scale(0.95);
+        }
+
+        .settings-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #666;
+        }
+
+        .settings-menu {
+            position: absolute;
+            top: 70px;
+            right: 30px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            min-width: 200px;
+        }
+
+        .settings-menu.active {
+            display: block;
+        }
+
+        .settings-menu h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .unit-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .unit-toggle button {
+            flex: 1;
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .unit-toggle button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .settings-menu button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .settings-menu button:first-of-type {
+            margin-top: 0;
+        }
+
+        .settings-menu .export-btn {
+            background: #28a745;
+        }
+
+        .settings-menu .export-btn:hover {
+            background: #218838;
+        }
+
+        @media (hover: none) {
+            .settings-menu .export-btn:hover {
+                background: #28a745;
+            }
+            .settings-menu .export-btn:active {
+                background: #218838;
+            }
+        }
+
+        .settings-menu .import-btn {
+            background: #17a2b8;
+        }
+
+        .settings-menu .import-btn:hover {
+            background: #138496;
+        }
+
+        @media (hover: none) {
+            .settings-menu .import-btn:hover {
+                background: #17a2b8;
+            }
+            .settings-menu .import-btn:active {
+                background: #138496;
+            }
+        }
+
+        .settings-menu .danger-btn {
+            background: #dc3545;
+        }
+
+        .settings-menu .danger-btn:hover {
+            background: #c82333;
+        }
+
+        @media (hover: none) {
+            .settings-menu .danger-btn:hover {
+                background: #dc3545;
+            }
+            .settings-menu .danger-btn:active {
+                background: #c82333;
+            }
+        }
+
+        #importFile {
+            display: none;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            flex: 1;
+            min-width: 120px;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+        
+        /* Remove spinner for number inputs */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            -webkit-appearance: none;
+            -webkit-touch-callout: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+        
+        @media (hover: none) {
+            button:hover {
+                background: #007bff;
+            }
+            button:active {
+                background: #0056b3;
+            }
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            height: 300px;
+            position: relative;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            touch-action: none;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .entries-list {
+            margin-top: 30px;
+        }
+
+        .entries-list h2 {
+            font-size: clamp(18px, 4vw, 24px);
+        }
+
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            gap: 10px;
+        }
+
+        .entry:last-child {
+            border-bottom: none;
+        }
+
+        .entry-date {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .entry-weight {
+            color: #007bff;
+            font-weight: 500;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            padding: 6px 12px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        @media (hover: none) {
+            .delete-btn:hover {
+                background: #dc3545;
+            }
+            .delete-btn:active {
+                background: #c82333;
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
+        
+        /* Loading indicator for PWA */
+        .install-prompt {
+            display: none;
+            background: #28a745;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .install-prompt button {
+            background: white;
+            color: #28a745;
+            padding: 8px 16px;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                padding-top: max(10px, env(safe-area-inset-top));
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .input-section {
+                flex-direction: column;
+            }
+            
+            input[type="number"], button {
+                width: 100%;
+            }
+            
+            .entry {
+                flex-wrap: wrap;
+            }
+            
+            .entry-date {
+                flex-basis: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .settings-menu {
+                right: 20px;
+                left: 20px;
+                top: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="installPrompt" class="install-prompt">
+            📱 Add to Home Screen for easy access!
+            <button onclick="hideInstallPrompt()">Got it</button>
+        </div>
+        
+        <div class="header">
+            <h1>Weight Tracker</h1>
+            <div class="settings-icon" onclick="toggleSettings()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div id="settingsMenu" class="settings-menu">
+            <div class="settings-section">
+                <h3>Unit</h3>
+                <div class="unit-toggle">
+                    <button id="lbBtn" class="active" onclick="switchUnit('lb')">lb</button>
+                    <button id="kgBtn" onclick="switchUnit('kg')">kg</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Data</h3>
+                <button class="export-btn" onclick="exportData()">Export Data</button>
+                <button class="import-btn" onclick="triggerImport()">Import Data</button>
+                <button class="danger-btn" onclick="deleteAllData()">Delete All Data</button>
+                <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <input type="number" id="weightInput" placeholder="Enter today's weight" step="0.1" />
+            <button onclick="addEntry()">Log Weight</button>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="weightChart"></canvas>
+        </div>
+
+        <div class="entries-list">
+            <h2 style="margin-bottom: 15px; color: #333;">Recent Entries</h2>
+            <div id="entriesList"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUnit = 'lb';
+        let entries = [];
+        let deferredPrompt;
+
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            // Create service worker inline
+            const swCode = `
+                self.addEventListener('install', (e) => {
+                    self.skipWaiting();
+                });
+                
+                self.addEventListener('activate', (e) => {
+                    self.clients.claim();
+                });
+                
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then((response) => {
+                            return response || fetch(e.request);
+                        })
+                    );
+                });
+            `;
+            
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl).catch(() => {
+                // Silent fail - PWA features are optional
+            });
+        }
+
+        // PWA Install Prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallPrompt();
+        });
+
+        function showInstallPrompt() {
+            const prompt = document.getElementById('installPrompt');
+            if (prompt && !localStorage.getItem('installPromptDismissed')) {
+                prompt.style.display = 'block';
+            }
+        }
+
+        function hideInstallPrompt() {
+            const prompt = document.getElementById('installPrompt');
+            if (prompt) {
+                prompt.style.display = 'none';
+                localStorage.setItem('installPromptDismissed', 'true');
+            }
+        }
+
+        // iOS Install Prompt
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        function isInStandaloneMode() {
+            return ('standalone' in window.navigator) && (window.navigator.standalone);
+        }
+
+        // Show iOS install prompt if not already installed
+        if (isIOS() && !isInStandaloneMode() && !localStorage.getItem('installPromptDismissed')) {
+            setTimeout(showInstallPrompt, 2000);
+        }
+
+        // Settings menu toggle
+        function toggleSettings() {
+            const menu = document.getElementById('settingsMenu');
+            if (menu) {
+                menu.classList.toggle('active');
+            }
+        }
+
+        // Close settings menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('settingsMenu');
+            const settingsIcon = document.querySelector('.settings-icon');
+            
+            if (menu && settingsIcon && !menu.contains(e.target) && !settingsIcon.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Get today's date in YYYY-MM-DD format
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('weightEntries');
+            const savedUnit = localStorage.getItem('weightUnit');
+            
+            if (saved) {
+                try {
+                    entries = JSON.parse(saved);
+                } catch (e) {
+                    entries = [];
+                }
+            }
+            
+            if (savedUnit) {
+                currentUnit = savedUnit;
+                updateUnitButtons();
+            }
+            
+            renderChart();
+            renderEntries();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('weightEntries', JSON.stringify(entries));
+                localStorage.setItem('weightUnit', currentUnit);
+            } catch (e) {
+                alert('Unable to save data. Storage may be full.');
+            }
+        }
+
+        // Convert between units
+        function convertWeight(weight, fromUnit, toUnit) {
+            if (fromUnit === toUnit) return weight;
+            if (fromUnit === 'lb' && toUnit === 'kg') return weight * 0.453592;
+            if (fromUnit === 'kg' && toUnit === 'lb') return weight / 0.453592;
+            return weight;
+        }
+
+        // Switch unit
+        function switchUnit(unit) {
+            currentUnit = unit;
+            updateUnitButtons();
+            saveData();
+            renderChart();
+            renderEntries();
+            
+            // Close settings menu
+            const menu = document.getElementById('settingsMenu');
+            if (menu) {
+                menu.classList.remove('active');
+            }
+        }
+
+        function updateUnitButtons() {
+            const lbBtn = document.getElementById('lbBtn');
+            const kgBtn = document.getElementById('kgBtn');
+            if (lbBtn) lbBtn.classList.toggle('active', currentUnit === 'lb');
+            if (kgBtn) kgBtn.classList.toggle('active', currentUnit === 'kg');
+        }
+
+        // Export data
+        function exportData() {
+            if (entries.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const exportData = {
+                entries: entries,
+                unit: currentUnit,
+                exportDate: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `weight-tracker-${getTodayDate()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            // Close settings menu
+            const menu = document.getElementById('settingsMenu');
+            if (menu) {
+                menu.classList.remove('active');
+            }
+        }
+
+        // Trigger file import
+        function triggerImport() {
+            const fileInput = document.getElementById('importFile');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        // Import data
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.entries || !Array.isArray(importedData.entries)) {
+                        alert('Invalid data format');
+                        return;
+                    }
+
+                    const confirmed = confirm(
+                        `This will import ${importedData.entries.length} entries. ` +
+                        `Your current data will be merged with the imported data. Continue?`
+                    );
+
+                    if (!confirmed) return;
+
+                    // Merge entries, removing duplicates by date
+                    const mergedEntries = [...entries];
+                    importedData.entries.forEach(importedEntry => {
+                        // Remove existing entry with same date
+                        const index = mergedEntries.findIndex(e => e.date === importedEntry.date);
+                        if (index !== -1) {
+                            mergedEntries.splice(index, 1);
+                        }
+                        mergedEntries.push(importedEntry);
+                    });
+
+                    entries = mergedEntries;
+                    entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                    // Import unit preference if available
+                    if (importedData.unit) {
+                        currentUnit = importedData.unit;
+                        updateUnitButtons();
+                    }
+
+                    saveData();
+                    renderChart();
+                    renderEntries();
+
+                    alert('Data imported successfully!');
+
+                    // Close settings menu
+                    const menu = document.getElementById('settingsMenu');
+                    if (menu) {
+                        menu.classList.remove('active');
+                    }
+
+                } catch (error) {
+                    alert('Error importing data. Please check the file format.');
+                    console.error('Import error:', error);
+                }
+
+                // Reset file input
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Delete all data
+        function deleteAllData() {
+            if (entries.length === 0) {
+                alert('No data to delete');
+                return;
+            }
+
+            const confirmed = confirm(
+                `Are you sure you want to delete all ${entries.length} entries? ` +
+                `This action cannot be undone.`
+            );
+
+            if (!confirmed) return;
+
+            const doubleConfirmed = confirm('Really delete everything? This is your last chance!');
+            
+            if (!doubleConfirmed) return;
+
+            entries = [];
+            saveData();
+            renderChart();
+            renderEntries();
+
+            alert('All data deleted');
+
+            // Close settings menu
+            const menu = document.getElementById('settingsMenu');
+            if (menu) {
+                menu.classList.remove('active');
+            }
+        }
+
+        // Add new entry
+        function addEntry() {
+            const weightInput = document.getElementById('weightInput');
+            
+            if (!weightInput) return;
+            
+            const date = getTodayDate();
+            const weight = parseFloat(weightInput.value);
+            
+            if (!weight || isNaN(weight)) {
+                alert('Please enter your weight');
+                return;
+            }
+            
+            if (weight <= 0 || weight > 1000) {
+                alert('Please enter a valid weight');
+                return;
+            }
+            
+            // Remove existing entry for today
+            entries = entries.filter(e => e.date !== date);
+            
+            // Add new entry (store in current unit)
+            entries.push({
+                date: date,
+                weight: weight,
+                unit: currentUnit
+            });
+            
+            // Sort by date
+            entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            saveData();
+            renderChart();
+            renderEntries();
+            
+            // Clear weight input
+            weightInput.value = '';
+            
+            // Show success feedback
+            weightInput.placeholder = '✓ Weight logged!';
+            setTimeout(() => {
+                weightInput.placeholder = 'Enter today\'s weight';
+            }, 2000);
+        }
+
+        // Delete entry
+        function deleteEntry(date) {
+            if (confirm('Delete this entry?')) {
+                entries = entries.filter(e => e.date !== date);
+                saveData();
+                renderChart();
+                renderEntries();
+            }
+        }
+
+        // Render entries list
+        function renderEntries() {
+            const list = document.getElementById('entriesList');
+            if (!list) return;
+            
+            if (entries.length === 0) {
+                list.innerHTML = '<div class="no-data">No entries yet. Add your first weight measurement above!</div>';
+                return;
+            }
+            
+            list.innerHTML = entries
+                .slice()
+                .reverse()
+                .map((entry, index) => {
+                    const displayWeight = convertWeight(entry.weight, entry.unit, currentUnit);
+                    return `
+                        <div class="entry">
+                            <span class="entry-date">${formatDate(entry.date)}</span>
+                            <span class="entry-weight">${displayWeight.toFixed(1)} ${currentUnit}</span>
+                            <button class="delete-btn" data-date="${entry.date}">Delete</button>
+                        </div>
+                    `;
+                })
+                .join('');
+            
+            // Add event listeners to delete buttons
+            const deleteButtons = list.querySelectorAll('.delete-btn');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const date = this.getAttribute('data-date');
+                    deleteEntry(date);
+                });
+            });
+        }
+
+        // Format date for display
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr + 'T00:00:00');
+                const today = new Date(getTodayDate() + 'T00:00:00');
+                
+                // Check if it's today
+                if (date.getTime() === today.getTime()) {
+                    return 'Today';
+                }
+                
+                // Check if it's yesterday
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (date.getTime() === yesterday.getTime()) {
+                    return 'Yesterday';
+                }
+                
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // Render chart
+        function renderChart() {
+            const canvas = document.getElementById('weightChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size with device pixel ratio for sharp rendering
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            if (entries.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No data to display', width / 2, height / 2);
+                return;
+            }
+            
+            // Convert all weights to current unit
+            const weights = entries.map(e => convertWeight(e.weight, e.unit, currentUnit));
+            const dates = entries.map(e => e.date);
+            
+            // Calculate bounds
+            const minWeight = Math.min(...weights);
+            const maxWeight = Math.max(...weights);
+            const padding = 40;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            
+            // Add some padding to the weight range
+            const weightRange = maxWeight - minWeight || 10;
+            const weightMin = minWeight - weightRange * 0.1;
+            const weightMax = maxWeight + weightRange * 0.1;
+            
+            // Draw axes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            // Draw grid lines and y-axis labels
+            ctx.strokeStyle = '#e9ecef';
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (chartHeight / 5) * i;
+                const weight = weightMax - (weightMax - weightMin) * (i / 5);
+                
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+                
+                ctx.textAlign = 'right';
+                ctx.fillText(weight.toFixed(1), padding - 5, y + 4);
+            }
+            
+            // Plot line
+            if (weights.length > 0) {
+                ctx.strokeStyle = '#007bff';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                
+                weights.forEach((weight, i) => {
+                    const x = padding + (chartWidth / Math.max(weights.length - 1, 1)) * i;
+                    const y = height - padding - ((weight - weightMin) / (weightMax - weightMin)) * chartHeight;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+                
+                // Draw points
+                ctx.fillStyle = '#007bff';
+                weights.forEach((weight, i) => {
+                    const x = padding + (chartWidth / Math.max(weights.length - 1, 1)) * i;
+                    const y = height - padding - ((weight - weightMin) / (weightMax - weightMin)) * chartHeight;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            // Draw unit label
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(currentUnit, padding, padding - 10);
+        }
+
+        // Initialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadData);
+        } else {
+            loadData();
+        }
+
+        // Redraw chart on window resize with debouncing
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(renderChart, 100);
+        });
+        
+        // Handle orientation change on mobile
+        window.addEventListener('orientationchange', () => {
+            setTimeout(renderChart, 100);
+        });
+    </script>
+</body>
+</html>
